@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:math_expressions/math_expressions.dart';
 
 main() {
   runApp(MaterialApp(
@@ -15,117 +16,156 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  TextEditingController controller1 = TextEditingController();
-  TextEditingController controller2 = TextEditingController();
-  int? result = 0, num1 = 0, num2 = 0;
-  add() {
+  String equation = "0";
+  String result = "0";
+  String expression = "";
+  double equationFontSize = 38.0;
+  double resultFontSize = 48.0;
+
+  buttonPressed(String buttonText) {
     setState(() {
-      num1 = int.parse(controller1.text);
-      num2 = int.parse(controller2.text);
-      result = num1! + num2!;
+      if (buttonText == "C") {
+        equation = "0";
+        result = "0";
+        double equationFontSize = 38.0;
+        double resultFontSize = 48.0;
+      } else if (buttonText == "Del") {
+        double equationFontSize = 48.0;
+        double resultFontSize = 38.0;
+        equation = equation.substring(0, equation.length - 1);
+        if (equation == "") {
+          equation = "0";
+        }
+      } else if (buttonText == "=") {
+        double equationFontSize = 38.0;
+        double resultFontSize = 48.0;
+        expression = equation;
+        expression = expression.replaceAll('×', '*');
+        expression = expression.replaceAll('÷', '/');
+        try {
+          Parser p = new Parser();
+          Expression exp = p.parse(expression);
+          ContextModel cm = ContextModel();
+          result = '${exp.evaluate(EvaluationType.REAL, cm)}';
+        } catch (e) {
+          result = "Error";
+        }
+      } else {
+        double equationFontSize = 48.0;
+        double resultFontSize = 38.0;
+        if (equation == "0") {
+          equation = buttonText;
+        } else {
+          equation = equation + buttonText;
+        }
+      }
     });
   }
 
-  sub() {
-    setState(() {
-      num1 = int.parse(controller1.text);
-      num2 = int.parse(controller2.text);
-      result = num1! - num2!;
-    });
-  }
-
-  mul() {
-    setState(() {
-      num1 = int.parse(controller1.text);
-      num2 = int.parse(controller2.text);
-      result = num1! * num2!;
-    });
-  }
-
-  divi() {
-    setState(() {
-      num1 = int.parse(controller1.text);
-      num2 = int.parse(controller2.text);
-      result = num1! ~/ num2!;
-    });
+  Widget buildButton(
+      String buttonText, double buttonHeight, Color buttonColor) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.1 * buttonHeight,
+      color: buttonColor,
+      child: FloatingActionButton(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(0.0),
+          side: BorderSide(
+              color: Colors.white, width: 1, style: BorderStyle.solid),
+        ),
+        // padding: EdgeInsets.all(16.0),
+        onPressed: () => buttonPressed(buttonText),
+        child: Text(
+          buttonText,
+          style: TextStyle(
+              fontSize: 30.0,
+              fontWeight: FontWeight.normal,
+              color: Colors.white),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Calculator"),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
+        appBar: AppBar(title: Text("Calculator")),
+        body: Column(
           children: [
-            Text("Result : $result",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(
-              height: 20,
-            ),
-            TextField(
-              controller: controller1,
-              decoration: InputDecoration(
-                  labelText: "Enter First Number",
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20))),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            TextField(
-              controller: controller2,
-              decoration: InputDecoration(
-                  labelText: "Enter Second Number",
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20))),
-            ),
-            SizedBox(
-              height: 20,
+            Container(
+                alignment: Alignment.centerRight,
+                padding: EdgeInsets.fromLTRB(10, 20, 10, 10),
+                child: Text(
+                  equation,
+                  style: TextStyle(fontSize: equationFontSize),
+                )),
+            Container(
+                alignment: Alignment.centerRight,
+                padding: EdgeInsets.fromLTRB(10, 20, 10, 10),
+                child: Text(
+                  result,
+                  style: TextStyle(fontSize: resultFontSize),
+                )),
+            Expanded(
+              child: Divider(),
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                    onPressed: () {
-                      add();
-                      controller1.clear();
-                      controller2.clear();
-                    },
-                    child: Text("Add")),
-                ElevatedButton(
-                    onPressed: () {
-                      sub();
-                      controller1.clear();
-                      controller2.clear();
-                    },
-                    child: Text("Sub")),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                    onPressed: () {
-                      mul();
-                      controller1.clear();
-                      controller2.clear();
-                    },
-                    child: Text("Mul")),
-                ElevatedButton(
-                    onPressed: () {
-                      divi();
-                      controller1.clear();
-                      controller2.clear();
-                    },
-                    child: Text("Divi")),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.75,
+                  child: Table(
+                    children: [
+                      TableRow(children: [
+                        buildButton("C", 1, Colors.redAccent),
+                        buildButton("Del", 1, Colors.blue),
+                        buildButton("÷", 1, Colors.blue),
+                      ]),
+                      TableRow(children: [
+                        buildButton("7", 1, Colors.black54),
+                        buildButton("8", 1, Colors.black54),
+                        buildButton("9", 1, Colors.black54),
+                      ]),
+                      TableRow(children: [
+                        buildButton("4", 1, Colors.black54),
+                        buildButton("5", 1, Colors.black54),
+                        buildButton("6", 1, Colors.black54),
+                      ]),
+                      TableRow(children: [
+                        buildButton("1", 1, Colors.black54),
+                        buildButton("2", 1, Colors.black54),
+                        buildButton("3", 1, Colors.black54),
+                      ]),
+                      TableRow(children: [
+                        buildButton(".", 1, Colors.black54),
+                        buildButton("0", 1, Colors.black54),
+                        buildButton("00", 1, Colors.black54),
+                      ]),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.25,
+                  child: Table(
+                    children: [
+                      TableRow(children: [
+                        buildButton("×", 1, Colors.blue),
+                      ]),
+                      TableRow(children: [
+                        buildButton("-", 1, Colors.blue),
+                      ]),
+                      TableRow(children: [
+                        buildButton("+", 1, Colors.blue),
+                      ]),
+                      TableRow(children: [
+                        buildButton("=", 2, Colors.redAccent),
+                      ]),
+                    ],
+                  ),
+                )
               ],
             ),
           ],
-        ),
-      ),
-    );
+        ));
   }
 }
